@@ -51,6 +51,11 @@ class Camera:
     def extrinsics(self):
         return np.hstack([self.R, self.t])
 
+    @property
+    def params(self):
+        return self.R, self.t, self.K, self.dist
+    
+
 
 def euclidean_to_homogeneous(points):
     """Converts euclidean points to homogeneous

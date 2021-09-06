@@ -12,6 +12,8 @@ from mvn.utils.multiview import Camera
 from mvn.utils.img import get_square_bbox, resize_image, crop_image, normalize_image, scale_bbox
 from mvn.utils import volumetric
 
+torch.set_printoptions(sci_mode=False)
+np.set_printoptions(suppress=True)
 
 class Human36MMultiViewDataset(Dataset):
     """
@@ -145,6 +147,11 @@ class Human36MMultiViewDataset(Dataset):
             # load camera
             shot_camera = self.labels['cameras'][shot['subject_idx'], camera_idx]
             retval_camera = Camera(shot_camera['R'], shot_camera['t'], shot_camera['K'], shot_camera['dist'], camera_name)
+            print('R ', shot_camera['R'])
+            print('t ', shot_camera['t'])
+            print('K ', shot_camera['K'])
+            print('dist ', shot_camera['dist'])
+            print('sample retval_camera.projection befor', retval_camera.projection)
 
             if self.crop:
                 # crop image
@@ -167,11 +174,16 @@ class Human36MMultiViewDataset(Dataset):
             sample['cameras'].append(retval_camera)
             sample['proj_matrices'].append(retval_camera.projection)
 
+            print('sample image_path ',image_path)
+            print('sample bbox ',bbox)
+            print('sample retval_camera.projection ', retval_camera.projection)
+
         # 3D keypoints
         # add dummy confidences
         sample['keypoints_3d'] = np.pad(
             shot['keypoints'][:self.num_keypoints],
             ((0,0), (0,1)), 'constant', constant_values=1.0)
+        
 
         # build cuboid
         # base_point = sample['keypoints_3d'][6, :3]
@@ -184,6 +196,7 @@ class Human36MMultiViewDataset(Dataset):
 
         if self.keypoints_3d_pred is not None:
             sample['pred_keypoints_3d'] = self.keypoints_3d_pred[idx]
+            print('sample pred_keypoints_3d', sample['pred_keypoints_3d'])
 
         sample.default_factory = None
         return sample

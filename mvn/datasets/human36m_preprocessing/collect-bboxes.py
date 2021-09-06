@@ -53,7 +53,7 @@ def load_bboxes(data_path, subject, action, camera):
             data_path,
             subject,
             'MySegmentsMat',
-            'ground_truth_bb',
+            'ground_truth_bs',
             '%s.%s.mat' % (corrected_action, camera))
 
         with h5py.File(bboxes_path, 'r') as h5file:

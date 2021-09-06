@@ -375,3 +375,67 @@ def get_pose_net(config, device='cuda:0'):
         print("Successfully loaded pretrained weights for backbone")
 
     return model
+
+def get_pose_net(device='cuda:0'):
+    backbone = {'name': "resnet152",
+                    'style': "simple",
+                    'init_weights': True,
+                    'checkpoint': "./data/pretrained/human36m/pose_resnet_4.5_pixels_human36m.pth",
+                    'num_joints': 17,
+                    'num_layers': 152}
+
+    block_class, layers = resnet_spec[backbone['num_layers']]
+    # if config.style == 'caffe':
+    #     block_class = Bottleneck_CAFFE
+
+    model = PoseResNet(
+        block_class, layers, backbone['num_joints'],
+        num_input_channels=3,
+        deconv_with_bias=False,
+        num_deconv_layers=3,
+        num_deconv_filters=(256, 256, 256),
+        num_deconv_kernels=(4, 4, 4),
+        final_conv_kernel=1,
+        alg_confidences=False,
+        vol_confidences=False
+    )
+
+    print("Loading pretrained weights from: {}".format(backbone['checkpoint']))
+    model_state_dict = model.state_dict()
+    pretrained_state_dict = torch.load(backbone['checkpoint'], map_location=device)
+
+    if 'state_dict' in pretrained_state_dict:
+        pretrained_state_dict = pretrained_state_dict['state_dict']
+
+    prefix = "module."
+
+    new_pretrained_state_dict = {}
+    for k, v in pretrained_state_dict.items():
+        if k.replace(prefix, "") in model_state_dict and v.shape == model_state_dict[k.replace(prefix, "")].shape:
+            new_pretrained_state_dict[k.replace(prefix, "")] = v
+        elif k.replace(prefix, "") == "final_layer.weight":  # TODO
+            print("Reiniting final layer filters:", k)
+
+            o = torch.zeros_like(model_state_dict[k.replace(prefix, "")][:, :, :, :])
+            nn.init.xavier_uniform_(o)
+            n_filters = min(o.shape[0], v.shape[0])
+            o[:n_filters, :, :, :] = v[:n_filters, :, :, :]
+
+            new_pretrained_state_dict[k.replace(prefix, "")] = o
+        elif k.replace(prefix, "") == "final_layer.bias":
+            print("Reiniting final layer biases:", k)
+            o = torch.zeros_like(model_state_dict[k.replace(prefix, "")][:])
+            nn.init.zeros_(o)
+            n_filters = min(o.shape[0], v.shape[0])
+            o[:n_filters] = v[:n_filters]
+
+            new_pretrained_state_dict[k.replace(prefix, "")] = o
+
+    not_inited_params = set(map(lambda x: x.replace(prefix, ""), pretrained_state_dict.keys())) - set(new_pretrained_state_dict.keys())
+    if len(not_inited_params) > 0:
+        print("Parameters [{}] were not inited".format(not_inited_params))
+
+    model.load_state_dict(new_pretrained_state_dict, strict=False)
+    print("Successfully loaded pretrained weights for backbone")
+
+    return model

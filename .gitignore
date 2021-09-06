@@ -102,3 +102,9 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+data
+.vscode
+logs
+vol_result.txt
+vol_img.txt
