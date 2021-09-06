@@ -97,7 +97,7 @@ def get_data(device):
     print('1.1')
 
     #
-    img_path1 = './data/human36m/processed/S9/Directions-1/imageSequence/55011271/img_000001.jpg'
+    img_path1 = './data/human36m/processed/S9/Directions-1/imageSequence-undistorted/55011271/img_000001.jpg'
     bbox1 = (294, 215, 700, 621)    #LTRB
     image1 = cv2.imread(img_path1)
 
@@ -126,7 +126,7 @@ def get_data(device):
     print('1.2')
 
     #
-    img_path2 = './data/human36m/processed/S9/Directions-1/imageSequence/60457274/img_000001.jpg'
+    img_path2 = './data/human36m/processed/S9/Directions-1/imageSequence-undistorted/60457274/img_000001.jpg'
     image2 = cv2.imread(img_path2)
     bbox2 = (245, 128, 775, 658)    
     R2 = np.array([[ 0.9154607 , -0.39734608,  0.0636223 ],
